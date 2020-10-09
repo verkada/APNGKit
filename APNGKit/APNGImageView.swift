@@ -45,7 +45,26 @@
 /// All images associated with an APNGImageView object should use the same scale. 
 /// If your application uses images with different scales, they may render incorrectly.
 open class APNGImageView: APNGView {
-    
+  
+    private var intervalInSecs: Double = 0.016  //  62.5 frame per seconds
+  
+    /// number of frames per second, default and maximum value is 62.5
+    open var numberOfFramesPerSeconds: Double = 62.5 {
+        didSet {
+            guard numberOfFramesPerSeconds != oldValue else { return }
+            guard numberOfFramesPerSeconds > 62.5 else {
+                numberOfFramesPerSeconds = 62.5
+                return
+            }
+            
+            intervalInSecs = 1 / numberOfFramesPerSeconds
+            if wasAnimating {
+                stopAnimating()
+                startAnimating()
+            }
+        }
+    }
+  
     /// The image displayed in the image view.
     /// If you change the image when the animation playing, 
     /// the animation of original image will stop, and the new one will start automatically.
@@ -222,7 +241,7 @@ open class APNGImageView: APNGView {
         setCurrentFrame()
 
         isAnimating = true
-        timer = GCDTimer(intervalInSecs: 0.016)
+        timer = GCDTimer(intervalInSecs: intervalInSecs)
         timer!.Event = { [weak self] in
             DispatchQueue.main.sync { self?.tick() }
         }
